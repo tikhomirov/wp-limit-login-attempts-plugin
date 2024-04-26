@@ -10,7 +10,7 @@
  * 
  * Requires at least: 4.6
  * Tested up to: 6.3
- * Requires PHP: 8.0+
+ * Requires PHP: 7.4+
  */
 
 defined('ABSPATH') or die('There`s nothing here!');
@@ -20,9 +20,15 @@ require_once 'LimitAttemptsAdmin.php';
 class LimitLoginAttempts
 {
     public object $settings;
-    private WP_Error|null $error;
-    protected string|null $ip;
-    protected string|null $username;
+
+    /** @var WP_Error|null  */
+    private ?WP_Error $error;
+
+    /** @var string|null  */
+    protected ?string $ip;
+
+    /** @var string|null  */
+    protected ?string $username;
 
     public function __construct()
     {
@@ -59,7 +65,14 @@ class LimitLoginAttempts
             }
             wp_add_dashboard_widget('limit_login', __('login attempts', 'login'), [$this, 'dashboard_widget']);
         });
-        
+
+
+        add_action( 'init', function() {
+            // if neither WordPress admin nor running from wp-cli, exit quickly to prevent performance impact
+            if ( !is_admin() && ! ( defined( 'WP_CLI' ) && WP_CLI ) ) return;
+
+            load_plugin_textdomain( 'login', false, dirname( plugin_basename( __FILE__ ) ) . '/languages/' );
+        });
     }
 
 
@@ -141,7 +154,7 @@ class LimitLoginAttempts
     protected function add_error($msg)
     {
         $this->error = $this->error ?? new WP_Error();
-        $this->error->add('blocked', "<strong>Error: Your IP is blocked.</strong> $msg.");
+        $this->error->add('blocked', '<strong>Error: </strong>' . $msg );
 
         trigger_error($msg . sprintf('IP: %s, login: %s', $this->ip, $this->username), E_USER_WARNING);
 
@@ -172,19 +185,21 @@ class LimitLoginAttempts
         return $this->ip;
     }
     
-    public function dashboard_widget()
+    public function dashboard_widget():void
     {
         global $wpdb;
         
         $sql = "SELECT * FROM `rwp_options` WHERE `option_name` REGEXP '_transient_auth_*';";
         $result = $wpdb->get_results($sql);
 
-        $html = sprintf("<div class=\"bg-lighht\"><p>%s</p></div>",
+        $html = sprintf("<div class=\"bg-light\"><p>%s</p></div>",
         __('Last login attempts (max. 20 items)','login'));
         
         if(empty($result)){
-            return $html;
+            echo $html;
+            return;
         }
+
         $html .= '<table class="wp-list-table widefat fixed striped table-view-list">';
         $html .= '<tr><th>IP</th><th>login</th><th>time</th></tr>';
         $result = array_slice($result, 0, 20);
