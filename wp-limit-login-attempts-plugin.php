@@ -81,17 +81,21 @@ class LimitLoginAttempts
         $this->ip = $this->get_ip_address();
         $this->username = $username;
 
-        //delete_transient('auth_'. $this->ip);
+        delete_transient('auth_'. $this->ip);
+        
+        // [ip =>['time' => 'login']]]
         $list = get_transient('auth_' . $this->ip);
         $list = !empty($list) && is_string($list) ? json_decode($list, true) : [];
         $time = current_time('timestamp', false);
-
+        
         $time_difference = !empty($list[$this->ip]) ? $time - array_key_last($list[$this->ip]) : $time_limit;
 
         $list[$this->ip][$time] = $username;
         $allow = count($list[$this->ip]) < $attempts_limit;
-
-        if ($time_difference <= $time_limit) {
+        
+        // console_log(['ip_list' => $list, 'diff' => $time_difference, 'settings_limit' => $time_limit, '$allow' => $allow]);
+        
+        if ( $time_difference > $time_limit) {
             // Remove default WP authentication filters
             remove_filter('authenticate', 'wp_authenticate_username_password', 20);
             remove_filter('authenticate', 'wp_authenticate_email_password', 20);
