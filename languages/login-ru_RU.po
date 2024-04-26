@@ -1,0 +1,86 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Security. Limiting login attempts.\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-04-26 21:58+0000\n"
+"PO-Revision-Date: 2024-04-26 22:07+0000\n"
+"Last-Translator: Алексей Тихомиров\n"
+"Language-Team: Русский\n"
+"Language: ru_RU\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10 >= 2 && "
+"n%10<=4 &&(n%100<10||n%100 >= 20)? 1 : 2);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.7; wp-6.5.2\n"
+"X-Domain: login"
+
+#. Author of the plugin
+msgid "Aleksey Tikhomirov"
+msgstr "Алексей Тихомиров"
+
+#: LimitAttemptsAdmin.php:48
+msgid "Block time"
+msgstr "Время блокировки"
+
+#: LimitAttemptsAdmin.php:51
+msgid "Blocking period, in milliseconds."
+msgstr "Период блокировки, в миллисекундах."
+
+#: wp-limit-login-attempts-plugin.php:46
+msgid "Enter the site"
+msgstr "Вход на сайт"
+
+#. Author URI of the plugin
+msgid "http://rwsite.ru"
+msgstr "http://rwsite.ru"
+
+#: wp-limit-login-attempts-plugin.php:183
+msgid "Last login attempts (max. 20 items)"
+msgstr "Последние попытки входа (максимум 20 элементов)"
+
+#: LimitAttemptsAdmin.php:26
+msgid "Limit attempts"
+msgstr "Количество попыток"
+
+#: LimitAttemptsAdmin.php:38
+msgid "Limit time"
+msgstr "Ограничение времени"
+
+#: wp-limit-login-attempts-plugin.php:60
+msgid "login attempts"
+msgstr "попытки входа"
+
+#: LimitAttemptsAdmin.php:30
+msgid ""
+"Maximum number of login attempts. After this, the IP will be blocked for a "
+"day."
+msgstr ""
+"Максимальное количество попыток входа. После этого IP будет заблокирован на "
+"сутки."
+
+#. Name of the plugin
+msgid "Security. Limiting login attempts."
+msgstr "Безопасность. Ограничение попыток входа."
+
+#: LimitAttemptsAdmin.php:41
+msgid "Time limit in seconds for 1 authorization attempt."
+msgstr "Ограничение времени в секундах на 1 попытку авторизации."
+
+#: wp-limit-login-attempts-plugin.php:117
+#, php-format
+msgid "Too many login attempts in less than %s seconds."
+msgstr "Слишком много попыток входа менее чем за %s секунд."
+
+#: wp-limit-login-attempts-plugin.php:126
+msgid "Too many login attempts. Your IP is blocked for a day."
+msgstr "Слишком много попыток входа. Ваш IP заблокирован на сутки."
+
+#. Description of the plugin
+msgid ""
+"WordPress Limit login attempts Plugin. Automatically blocked IP for many "
+"attempts login trys."
+msgstr ""
+"Плагин WordPress «Ограничение попыток входа в систему». Автоматически "
+"блокирует IP-адрес при многих попытках входа в систему. Защита от брутфорса."

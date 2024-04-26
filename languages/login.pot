@@ -1,0 +1,82 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Security. Limiting login attempts.\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-04-26 21:58+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.6.7; wp-6.5.2\n"
+"X-Domain: login"
+
+#. Author of the plugin
+msgid "Aleksey Tikhomirov"
+msgstr ""
+
+#: LimitAttemptsAdmin.php:48
+msgid "Block time"
+msgstr ""
+
+#: LimitAttemptsAdmin.php:51
+msgid "Blocking period, in milliseconds."
+msgstr ""
+
+#: wp-limit-login-attempts-plugin.php:46
+msgid "Enter the site"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "http://rwsite.ru"
+msgstr ""
+
+#: wp-limit-login-attempts-plugin.php:183
+msgid "Last login attempts (max. 20 items)"
+msgstr ""
+
+#: LimitAttemptsAdmin.php:26
+msgid "Limit attempts"
+msgstr ""
+
+#: LimitAttemptsAdmin.php:38
+msgid "Limit time"
+msgstr ""
+
+#: wp-limit-login-attempts-plugin.php:60
+msgid "login attempts"
+msgstr ""
+
+#: LimitAttemptsAdmin.php:30
+msgid ""
+"Maximum number of login attempts. After this, the IP will be blocked for a "
+"day."
+msgstr ""
+
+#. Name of the plugin
+msgid "Security. Limiting login attempts."
+msgstr ""
+
+#: LimitAttemptsAdmin.php:41
+msgid "Time limit in seconds for 1 authorization attempt."
+msgstr ""
+
+#: wp-limit-login-attempts-plugin.php:117
+#, php-format
+msgid "Too many login attempts in less than %s seconds."
+msgstr ""
+
+#: wp-limit-login-attempts-plugin.php:126
+msgid "Too many login attempts. Your IP is blocked for a day."
+msgstr ""
+
+#. Description of the plugin
+msgid ""
+"WordPress Limit login attempts Plugin. Automatically blocked IP for many "
+"attempts login trys."
+msgstr ""

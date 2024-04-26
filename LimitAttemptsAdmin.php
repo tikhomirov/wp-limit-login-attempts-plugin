@@ -27,7 +27,7 @@ class LimitAttemptsAdmin
             function (){
                 echo '<input type="text" name="attempts_limit" value="' . $this->settings->attempts_limit . '">';
                 echo sprintf('<p class="description">%s</p>',
-                    __('Максимальное кол-во попыток войти в систему. После этого IP будет заблокирован на сутки','login')
+                    __('Maximum number of login attempts. After this, the IP will be blocked for a day.','login')
                 );
             },
             'general',
@@ -38,7 +38,7 @@ class LimitAttemptsAdmin
             '<label for="time_limit">' . __('Limit time', 'login') . '</label>',
             function (){
                 echo '<input type="text" name="time_limit" value="' . $this->settings->time_limit . '">';
-                echo '<p class="description">'. __('Временной лимит в секундах на 1 попытку авторизации','login') .'</p>';
+                echo '<p class="description">'. __('Time limit in seconds for 1 authorization attempt.','login') .'</p>';
             },
             'general',
             'login-section'
@@ -48,7 +48,7 @@ class LimitAttemptsAdmin
             '<label for="block_period">' . __('Block time', 'login') . '</label>',
             function (){
                 echo '<input type="text" name="block_period" value="' . $this->settings->block_period . '">';
-                echo '<p class="description">'.__('Период блокировки','login').'</p>';
+                echo '<p class="description">'.__('Blocking period, in milliseconds.','login').'</p>';
             },
             'general',
             'login-section'

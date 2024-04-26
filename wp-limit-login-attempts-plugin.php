@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Security. Limiting login attempts.
  * Description: WordPress Limit login attempts Plugin. Automatically blocked IP for many attempts login trys.
- * Version:     1.0.0
+ * Version:     1.0.1
  * Author:      Aleksey Tikhomirov
  * Author URI:  http://rwsite.ru
  * Text Domain: login
@@ -13,7 +13,7 @@
  * Requires PHP: 8.0+
  */
 
-defined('ABSPATH') or die('Nothing here!');
+defined('ABSPATH') or die('There`s nothing here!');
 
 require_once 'LimitAttemptsAdmin.php';
 
@@ -52,6 +52,14 @@ class LimitLoginAttempts
         add_action( 'admin_init', function (){
             (new LimitAttemptsAdmin($this->settings))->add_actions();
         });
+        
+        add_action('wp_dashboard_setup', function () {
+            if (!current_user_can('manage_options')) {
+                return;
+            }
+            wp_add_dashboard_widget('limit_login', __('login attempts', 'login'), [$this, 'dashboard_widget']);
+        });
+        
     }
 
 
@@ -73,7 +81,7 @@ class LimitLoginAttempts
             return $user;
         }
 
-        console_log([$user, $username, $password]);
+        // console_log([$user, $username, $password]);
 
         $time_limit = $this->settings->time_limit; // sec
         $attempts_limit = $this->settings->attempts_limit; // attempts
@@ -81,21 +89,28 @@ class LimitLoginAttempts
         $this->ip = $this->get_ip_address();
         $this->username = $username;
 
-        delete_transient('auth_'. $this->ip);
+        // delete_transient('auth_'. $this->ip);
         
         // [ip =>['time' => 'login']]]
         $list = get_transient('auth_' . $this->ip);
         $list = !empty($list) && is_string($list) ? json_decode($list, true) : [];
         $time = current_time('timestamp', false);
         
-        $time_difference = !empty($list[$this->ip]) ? $time - array_key_last($list[$this->ip]) : $time_limit;
+        $time_difference = !empty($list[$this->ip]) ? $time - array_key_last($list[$this->ip]) : (int) $time_limit;
 
         $list[$this->ip][$time] = $username;
         $allow = count($list[$this->ip]) < $attempts_limit;
+
+        /*console_log([
+            'ip_list'        => $list,
+            'diff'           => $time_difference,
+            'settings_limit' => $time_limit,
+            '$allow'         => $allow,
+            'limit'          => $attempts_limit,
+            'attemps_limit'  => count($list[$this->ip]),
+        ]);*/
         
-        // console_log(['ip_list' => $list, 'diff' => $time_difference, 'settings_limit' => $time_limit, '$allow' => $allow]);
-        
-        if ( $time_difference > $time_limit) {
+        if ( $time_difference < $time_limit) {
             // Remove default WP authentication filters
             remove_filter('authenticate', 'wp_authenticate_username_password', 20);
             remove_filter('authenticate', 'wp_authenticate_email_password', 20);
@@ -109,6 +124,8 @@ class LimitLoginAttempts
             remove_filter('authenticate', 'wp_authenticate_email_password', 20);
 
             $user = $this->add_error(__('Too many login attempts. Your IP is blocked for a day.', 'login'));
+
+            set_transient('auth_' . $this->ip, json_encode($list), DAY_IN_SECONDS);
 
             if (defined('XMLRPC_REQUEST') && XMLRPC_REQUEST) {
                 header('HTTP/1.0 403 Forbidden');
@@ -153,6 +170,39 @@ class LimitLoginAttempts
             }
         }
         return $this->ip;
+    }
+    
+    public function dashboard_widget()
+    {
+        global $wpdb;
+        
+        $sql = "SELECT * FROM `rwp_options` WHERE `option_name` REGEXP '_transient_auth_*';";
+        $result = $wpdb->get_results($sql);
+
+        $html = sprintf("<div class=\"bg-lighht\"><p>%s</p></div>",
+        __('Last login attempts (max. 20 items)','login'));
+        
+        if(empty($result)){
+            return $html;
+        }
+        $html .= '<table class="wp-list-table widefat fixed striped table-view-list">';
+        $html .= '<tr><th>IP</th><th>login</th><th>time</th></tr>';
+        $result = array_slice($result, 0, 20);
+        foreach ($result as $object) {
+            $value = json_decode($object->option_value, true);
+            $ip = array_key_first($value);
+            $data = $value[$ip];
+            // echo '<pre>'; var_dump($value); echo '</pre>';wp_die();
+            foreach ($data as $time => $login) {
+                $html .= '<tr>';
+                $html .= '<td>'.$ip.'</td>';
+                $html .= '<td>' . $login.'</td>';
+                $html .= '<td>' . wp_date('d.m.Y H:i:s', $time).'</td>';
+                $html .= '</tr>';
+            }
+        }
+        $html .= '</table>';
+        echo $html;
     }
 }
 
