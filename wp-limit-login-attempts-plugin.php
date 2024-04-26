@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Security. Limiting login attempts.
  * Description: WordPress Limit login attempts Plugin. Automatically blocked IP for many attempts login trys.
- * Version:     1.0.1
+ * Version:     1.0.2
  * Author:      Aleksey Tikhomirov
  * Author URI:  http://rwsite.ru
  * Text Domain: login
@@ -202,6 +202,20 @@ class LimitLoginAttempts
 
         $html .= '<table class="wp-list-table widefat fixed striped table-view-list">';
         $html .= '<tr><th>IP</th><th>login</th><th>time</th></tr>';
+
+        usort($result, function ($a, $b){
+            $a_val = json_decode($a->option_value, true);
+            $a_ip = array_key_first($a_val);
+            $a_data = $a_val[$a_ip] ?? [];
+            $a_time = array_key_last($a_data);
+
+            $b_val = json_decode($b->option_value, true);
+            $b_ip = array_key_first($b_val);
+            $b_data = $a_val[$b_ip] ?? [];
+            $b_time = array_key_last($b_data);
+            return $a_time <=> $b_time;
+        } );
+
         $result = array_slice($result, 0, 20);
         foreach ($result as $object) {
             $value = json_decode($object->option_value, true);
