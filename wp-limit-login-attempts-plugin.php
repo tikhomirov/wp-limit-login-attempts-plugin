@@ -107,7 +107,7 @@ class LimitLoginAttempts
         // [ip =>['time' => 'login']]]
         $list = get_transient('auth_' . $this->ip);
         $list = !empty($list) && is_string($list) ? json_decode($list, true) : [];
-        $time = current_time('timestamp', false);
+        $time = current_time( 'timestamp' );
         
         $time_difference = !empty($list[$this->ip]) ? $time - array_key_last($list[$this->ip]) : (int) $time_limit;
 
@@ -164,7 +164,7 @@ class LimitLoginAttempts
     public function get_ip_address()
     {
         $this->ip = $_SERVER['REMOTE_ADDR'];
-        $headers = array(
+        $headers = [
             'HTTP_X_FORWARDED_FOR',
             'HTTP_X_CLUSTER_CLIENT_IP',
             'HTTP_CF_CONNECTING_IP',
@@ -176,7 +176,7 @@ class LimitLoginAttempts
             'HTTP_X_COMING_FROM',
             'HTTP_COMING_FROM',
             'REMOTE_ADDR'
-        );
+        ];
         foreach ($headers as $header) {
             if (isset($_SERVER[$header])) {
                 $this->ip = $_SERVER[$header];
@@ -188,13 +188,20 @@ class LimitLoginAttempts
     public function dashboard_widget():void
     {
         global $wpdb;
-        
-        $sql = "SELECT * FROM `rwp_options` WHERE `option_name` REGEXP '_transient_auth_*';";
-        $result = $wpdb->get_results($sql);
 
         $html = sprintf("<div class=\"bg-light\"><p>%s</p></div>",
         __('Last login attempts (max. 20 items)','login'));
-        
+        $html .= sprintf("<div class=\"bg-light\"><p>Your IP: <code>%s</code></p></div>",
+           $this->get_ip_address());
+
+        if ( wp_using_ext_object_cache() ) {
+            $html .= '<div class="status-label status-request-failed">The site uses external caching. The logs is not available, to remove the blocking, clear the cache.</div>';
+            echo $html;
+            return;
+        }
+
+        $sql = "SELECT * FROM `rwp_options` WHERE `option_name` REGEXP '_transient_auth_*' LIMIT 100;";
+        $result = $wpdb->get_results($sql);
         if(empty($result)){
             echo $html;
             return;
