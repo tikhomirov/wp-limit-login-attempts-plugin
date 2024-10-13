@@ -1,6 +1,7 @@
 {
   "name": "rwsite/wp-limit-login-attempts-plugin",
   "description": "WordPress Limit login attempts Plugin. Automatically blocked IP for many attempts login trys.",
+  "type": "wordpress-plugin",
   "minimum-stability": "stable",
   "license": "proprietary",
   "authors": [
