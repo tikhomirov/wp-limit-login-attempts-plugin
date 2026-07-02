@@ -123,7 +123,7 @@ class TwoFactorAuthorisation {
 			return $user;
 		}
 		$secret = get_user_meta( $user_id, 'totp_secret', true );
-		$code   = $_POST['totp_code'];
+		$code   = $_POST['totp_code'] ?? '';
 
 		$secret_code = Auth2FA::TOTP( $secret );
 		if ( ! empty( $secret ) && $secret_code !== $code ) {
