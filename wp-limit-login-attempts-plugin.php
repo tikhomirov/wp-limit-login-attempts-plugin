@@ -206,7 +206,7 @@ class LimitLoginAttempts
 
             $b_val = json_decode($b->option_value, true);
             $b_ip = array_key_first($b_val);
-            $b_data = $a_val[$b_ip] ?? [];
+            $b_data = $b_val[$b_ip] ?? [];
             $b_time = array_key_last($b_data);
             return $a_time <=> $b_time;
         } );
@@ -230,7 +230,7 @@ class LimitLoginAttempts
     }
 
 	protected function notify_by_mail( $username ) {
-		if ( 'yes' !== $this->settings['notify_user_by_mail'] ) {
+		if ( 'yes' !== $this->settings->notify_user_by_mail ) {
 			return;
 		}
 
