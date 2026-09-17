@@ -11,17 +11,31 @@ class Auth2FA {
 	 * @return string
 	 */
 	static function TOTP( $secret, int $timeSlice = 30 ): string {
-		$secret              = self::base32_decode( $secret );
 		$timeSliceBasedValue = floor( time() / $timeSlice );
-		$data                = pack( 'J', $timeSliceBasedValue );
-		$hash                = hash_hmac( 'sha1', $data, $secret, true );
-		$offset              = ord( $hash[19] ) & 0xf;
-		$otp                 = (
-			                       ( ( ord( $hash[ $offset + 0 ] ) & 0x7f ) << 24 ) |
-			                       ( ( ord( $hash[ $offset + 1 ] ) & 0xff ) << 16 ) |
-			                       ( ( ord( $hash[ $offset + 2 ] ) & 0xff ) << 8 ) |
-			                       ( ord( $hash[ $offset + 3 ] ) & 0xff )
-		                       ) % 1000000;
+
+		return self::TOTP_at( $secret, $timeSliceBasedValue );
+	}
+
+	/**
+	 * Generate TOTP code for a specific pre-computed time slice value.
+	 * Used internally for +-1 window verification.
+	 *
+	 * @param  string  $secret
+	 * @param  int     $timeSliceValue  Pre-computed floor(time/step) value
+	 *
+	 * @return string 6-digit OTP
+	 */
+	static function TOTP_at( string $secret, int $timeSliceValue ): string {
+		$secretKey = self::base32_decode( $secret );
+		$data      = pack( 'J', $timeSliceValue );
+		$hash      = hash_hmac( 'sha1', $data, $secretKey, true );
+		$offset    = ord( $hash[19] ) & 0xf;
+		$otp       = (
+			             ( ( ord( $hash[ $offset + 0 ] ) & 0x7f ) << 24 ) |
+			             ( ( ord( $hash[ $offset + 1 ] ) & 0xff ) << 16 ) |
+			             ( ( ord( $hash[ $offset + 2 ] ) & 0xff ) << 8 ) |
+			             ( ord( $hash[ $offset + 3 ] ) & 0xff )
+		             ) % 1000000;
 
 		return str_pad( $otp, 6, '0', STR_PAD_LEFT );
 	}
