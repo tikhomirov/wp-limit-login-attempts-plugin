@@ -310,10 +310,10 @@ class TwoFactorAuthorisation {
 					e.preventDefault();
 					var btn = $(this);
 					btn.prop("disabled", true).text("Generating\u2026");
-					$.post("' + $ajaxurl + '", {
+					$.post("' . $ajaxurl . '", {
 						action: "generate_pending_secret",
 						id: btn.data("user"),
-						nonce: "' + $nonce + '"
+						nonce: "' . $nonce . '"
 					}, function(response) {
 						if (response.success) {
 							location.reload();
@@ -339,11 +339,11 @@ class TwoFactorAuthorisation {
 					btn.prop("disabled", true);
 					msg.css("color", "#555").text("Checking\u2026");
 
-					$.post("' + $ajaxurl + '", {
+					$.post("' . $ajaxurl . '", {
 						action: "confirm_totp_setup",
 						id: btn.data("user"),
 						code: code,
-						nonce: "' + $nonce + '"
+						nonce: "' . $nonce . '"
 					}, function(response) {
 						if (response.success) {
 							msg.css("color", "#246b24").text("\u2713 " + response.data.message);
@@ -365,10 +365,10 @@ class TwoFactorAuthorisation {
 				$(document).on("click", "#regenerate-secret-button", function(e) {
 					e.preventDefault();
 					if (!confirm("This will invalidate your current 2FA. You will need to re-scan a new QR code. Continue?")) return;
-					$.post("' + $ajaxurl + '", {
+					$.post("' . $ajaxurl . '", {
 						action: "regenerate_secret",
 						id: $(this).data("user"),
-						nonce: "' + $nonce + '"
+						nonce: "' . $nonce . '"
 					}, function(response) {
 						alert(response.data.message);
 						location.reload();
@@ -379,10 +379,10 @@ class TwoFactorAuthorisation {
 				$(document).on("click", "#delete-secret-button", function(e) {
 					e.preventDefault();
 					if (!confirm("Are you sure you want to disable 2FA for this account?")) return;
-					$.post("' + $ajaxurl + '", {
+					$.post("' . $ajaxurl . '", {
 						action: "delete_secret",
 						id: $(this).data("user"),
-						nonce: "' + $nonce + '"
+						nonce: "' . $nonce . '"
 					}, function(response) {
 						alert(response.data.message);
 						location.reload();
