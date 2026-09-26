@@ -21,6 +21,7 @@
 
 ### Через Composer (рекомендуется)
 ```bash
+composer config repositories.tikhomirov-wp-limit-login-attempts-plugin git https://github.com/tikhomirov/wp-limit-login-attempts-plugin.git
 composer require tikhomirov/wp-limit-login-attempts-plugin
 ```
 
