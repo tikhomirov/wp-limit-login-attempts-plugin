@@ -1,15 +1,16 @@
 {
-  "name": "rwsite/wp-limit-login-attempts-plugin",
-  "description": "WordPress Limit login attempts Plugin. Automatically blocked IP for many attempts login trys.",
+  "name": "tikhomirov/wp-limit-login-attempts-plugin",
+  "description": "Комплексный плагин безопасности WordPress: авто-блокировка IP при подборе паролей (Brute-Force) + встроенная легкая двухфакторная аутентификация (2FA по коду).",
   "type": "wordpress-plugin",
-  "minimum-stability": "stable",
-  "license": "proprietary",
+  "license": "GPL-3.0-or-later",
   "authors": [
     {
       "name": "Aleksei Tikhomirov",
-      "email": "alex@rwsite.ru"
+      "email": "alex@rwsite.ru",
+      "homepage": "https://rwsite.ru"
     }
   ],
   "require": {
+    "php": ">=7.4"
   }
 }
