@@ -1,20 +1,46 @@
-# WordPress Security Plugin. Automatically blocked IP for many attempts login tries. + add lightweight 2FA by code.
+# WordPress Limit Login Attempts & 2FA (`wp-limit-login-attempts-plugin`)
 
-WordPress Limit login attempts Plugin. Automatically blocked IP for many attempts login trys.
+![WordPress Plugin](https://img.shields.io/badge/WordPress-5.0%2B-blue.svg)
+![PHP Support](https://img.shields.io/badge/PHP-7.4%20%7C%208.0%20%7C%208.1%20%7C%208.2%20%7C%208.3-777BB4.svg)
+![License](https://img.shields.io/badge/License-GPLv2-green.svg)
 
-<div class="display: block; margin: 30px auto;">
-<img src="https://i.imgur.com/eACz2Bj.png" width="48%">
-<img src="https://i.imgur.com/Cxj1ZGp.png" width="48%">
-</div>
+Комплексный плагин безопасности WordPress: авто-блокировка IP при подборе паролей (Brute-Force) + встроенная легкая двухфакторная аутентификация (2FA по коду).
 
-<hr>
-<div class="display: block; margin: 30px auto;">
-<img src="https://i.imgur.com/0UBBPBs.png" width="48%">
-<img src="https://i.imgur.com/3pzgpil.png" width="48%">
-</div>
+---
 
-<hr>
-<div class="display: block; margin: 30px auto;">
-<img src="https://i.imgur.com/QUs4KQc.png" width="48%">
-<img src="https://i.imgur.com/EKw2F0j.png" width="48%">
-</div>
+## 🚀 Возможности
+
+- 🛡️ **Защита от Brute-Force:** Блокировка IP-адресов при превышении лимита неудачных попыток входа.
+- 🔑 **Встроенная 2FA:** Легковесное подтверждение входа по одноразовому коду.
+- 📋 **Журнал попыток:** Логирование всех попыток авторизации и заблокированных IP в админ-панели.
+- ⚙️ **Кастомизация:** Настройка количества разрешенных попыток и времени блокировки.
+
+---
+
+## 📥 Установка
+
+### Через Composer (рекомендуется)
+```bash
+composer config repositories.tikhomirov-wp-limit-login-attempts-plugin git https://github.com/tikhomirov/wp-limit-login-attempts-plugin.git
+composer require tikhomirov/wp-limit-login-attempts-plugin
+```
+
+### Вручную
+1. Скачайте ZIP-архив репозитория.
+2. Распакуйте в директорию `/wp-content/plugins/wp-limit-login-attempts-plugin/`.
+3. Активируйте плагин в админ-панели **Плагины → Установленные**.
+
+---
+
+## 💻 Использование
+
+1. Активируйте плагин.
+2. Перейдите в меню **Настройки → Limit Login Attempts** для конфигурации лимитов времени и попыток.
+3. Опционально включите 2FA для администраторов.
+
+---
+
+## 🛠️ Требования
+
+- **WordPress:** 5.0 или выше
+- **PHP:** 7.4, 8.0, 8.1, 8.2, 8.3
