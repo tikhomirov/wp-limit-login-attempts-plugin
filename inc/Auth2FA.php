@@ -1,128 +1,120 @@
 <?php
+
 /**
  * Auth2FA Service
  */
+class Auth2FA
+{
+    public static function TOTP($secret, int $timeSlice = 30): string
+    {
+        $timeSliceBasedValue = floor(time() / $timeSlice);
 
-class Auth2FA {
-	/**
-	 * @param $secret
-	 * @param  int  $timeSlice
-	 *
-	 * @return string
-	 */
-	static function TOTP( $secret, int $timeSlice = 30 ): string {
-		$timeSliceBasedValue = floor( time() / $timeSlice );
+        return self::TOTP_at($secret, $timeSliceBasedValue);
+    }
 
-		return self::TOTP_at( $secret, $timeSliceBasedValue );
-	}
+    /**
+     * Generate TOTP code for a specific pre-computed time slice value.
+     * Used internally for +-1 window verification.
+     *
+     * @param  int    $timeSliceValue Pre-computed floor(time/step) value
+     * @return string 6-digit OTP
+     */
+    public static function TOTP_at(string $secret, int $timeSliceValue): string
+    {
+        $secretKey = self::base32_decode($secret);
+        $data = pack('J', $timeSliceValue);
+        $hash = hash_hmac('sha1', $data, $secretKey, true);
+        $offset = ord($hash[19]) & 0xF;
+        $otp = (
+            ((ord($hash[$offset + 0]) & 0x7F) << 24) |
+                         ((ord($hash[$offset + 1]) & 0xFF) << 16) |
+                         ((ord($hash[$offset + 2]) & 0xFF) << 8) |
+                         (ord($hash[$offset + 3]) & 0xFF)
+        ) % 1000000;
 
-	/**
-	 * Generate TOTP code for a specific pre-computed time slice value.
-	 * Used internally for +-1 window verification.
-	 *
-	 * @param  string  $secret
-	 * @param  int     $timeSliceValue  Pre-computed floor(time/step) value
-	 *
-	 * @return string 6-digit OTP
-	 */
-	static function TOTP_at( string $secret, int $timeSliceValue ): string {
-		$secretKey = self::base32_decode( $secret );
-		$data      = pack( 'J', $timeSliceValue );
-		$hash      = hash_hmac( 'sha1', $data, $secretKey, true );
-		$offset    = ord( $hash[19] ) & 0xf;
-		$otp       = (
-			             ( ( ord( $hash[ $offset + 0 ] ) & 0x7f ) << 24 ) |
-			             ( ( ord( $hash[ $offset + 1 ] ) & 0xff ) << 16 ) |
-			             ( ( ord( $hash[ $offset + 2 ] ) & 0xff ) << 8 ) |
-			             ( ord( $hash[ $offset + 3 ] ) & 0xff )
-		             ) % 1000000;
+        return mb_str_pad($otp, 6, '0', STR_PAD_LEFT);
+    }
 
-		return str_pad( $otp, 6, '0', STR_PAD_LEFT );
-	}
+    /**
+     * Return expire time of current TOTP code
+     *
+     * @param $secret
+     */
+    public static function expire_time(int $timeSlice = 30): int
+    {
+        $timeSliceBasedValue = floor(time() / $timeSlice);
 
-	/**
-	 * Return expire time of current TOTP code
-	 *
-	 * @param $secret
-	 * @param  int  $timeSlice
-	 *
-	 * @return int
-	 */
-	static function expire_time( int $timeSlice = 30 ): int {
-		$timeSliceBasedValue = floor( time() / $timeSlice );
+        return ($timeSliceBasedValue + 1) * $timeSlice;
+    }
 
-		return ( $timeSliceBasedValue + 1 ) * $timeSlice;
-	}
+    /**
+     * Generate HMAC-based One Time Password
+     *
+     *
+     * @return string OTP code
+     */
+    public static function HOTP($secret, $counter): string
+    {
+        $secret = self::base32_decode($secret);
+        $counter = pack('N*', 0) . pack('N*', $counter);
+        $hash = hash_hmac('sha1', $counter, $secret, true);
+        $offset = ord($hash[19]) & 0xF;
+        $code = (
+            ((ord($hash[$offset + 0]) & 0x7F) << 24) |
+                       ((ord($hash[$offset + 1]) & 0xFF) << 16) |
+                       ((ord($hash[$offset + 2]) & 0xFF) << 8) |
+                       (ord($hash[$offset + 3]) & 0xFF)
+        ) % 1000000;
 
-	/**
-	 * Generate HMAC-based One Time Password
-	 *
-	 * @param $secret
-	 * @param $counter
-	 *
-	 * @return string OTP code
-	 */
-	static function HOTP( $secret, $counter ): string {
-		$secret  = self::base32_decode( $secret );
-		$counter = pack( 'N*', 0 ) . pack( 'N*', $counter );
-		$hash    = hash_hmac( 'sha1', $counter, $secret, true );
-		$offset  = ord( $hash[19] ) & 0xf;
-		$code    = (
-			           ( ( ord( $hash[ $offset + 0 ] ) & 0x7f ) << 24 ) |
-			           ( ( ord( $hash[ $offset + 1 ] ) & 0xff ) << 16 ) |
-			           ( ( ord( $hash[ $offset + 2 ] ) & 0xff ) << 8 ) |
-			           ( ord( $hash[ $offset + 3 ] ) & 0xff )
-		           ) % 1000000;
+        return mb_str_pad($code, 6, '0', STR_PAD_LEFT);
+    }
 
-		return str_pad( $code, 6, '0', STR_PAD_LEFT );
-	}
+    /**
+     * Generate random secret key
+     *
+     *
+     * @return string secret key
+     */
+    public static function generate_secret(int $length = 32): string
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        $secret = '';
+        $maxIndex = mb_strlen($characters) - 1;
+        for ($i = 0; $i < $length; $i++) {
+            $secret .= $characters[rand(0, $maxIndex)];
+        }
 
-	/**
-	 * Generate random secret key
-	 *
-	 * @param  int  $length
-	 *
-	 * @return string secret key
-	 */
-	public static function generate_secret( int $length = 32 ): string {
-		$characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-		$secret     = '';
-		$maxIndex   = strlen( $characters ) - 1;
-		for ( $i = 0; $i < $length; $i ++ ) {
-			$secret .= $characters[ rand( 0, $maxIndex ) ];
-		}
+        return $secret;
+    }
 
-		return $secret;
-	}
+    /**
+     * Decode a base32-encoded string.
+     *
+     * @param  string $str The base32-encoded string to decode.
+     * @return string Returns the decoded string.
+     */
+    public static function base32_decode(string $str): string
+    {
+        $str = mb_strtoupper($str);
+        $str = str_replace(' ', '', $str);
+        $str = str_replace('-', '', $str);
+        $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        $map = array_flip(mb_str_split($chars));
+        $data = '';
+        $len = mb_strlen($str);
+        $buffer = 0;
+        $bufferSize = 0;
+        for ($i = 0; $i < $len; $i++) {
+            $char = mb_strtoupper($str[$i]);
+            $byte = $map[$char];
+            $buffer = ($buffer << 5) | $byte;
+            $bufferSize += 5;
+            if ($bufferSize >= 8) {
+                $bufferSize -= 8;
+                $data .= chr(($buffer >> $bufferSize) & 0xFF);
+            }
+        }
 
-	/**
-	 * Decode a base32-encoded string.
-	 *
-	 * @param  string  $str  The base32-encoded string to decode.
-	 *
-	 * @return string Returns the decoded string.
-	 */
-	static function base32_decode( string $str ): string {
-		$str        = strtoupper( $str );
-		$str        = str_replace( ' ', '', $str );
-		$str        = str_replace( '-', '', $str );
-		$chars      = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-		$map        = array_flip( str_split( $chars ) );
-		$data       = '';
-		$len        = strlen( $str );
-		$buffer     = 0;
-		$bufferSize = 0;
-		for ( $i = 0; $i < $len; $i ++ ) {
-			$char       = strtoupper( $str[ $i ] );
-			$byte       = $map[ $char ];
-			$buffer     = ( $buffer << 5 ) | $byte;
-			$bufferSize += 5;
-			if ( $bufferSize >= 8 ) {
-				$bufferSize -= 8;
-				$data       .= chr( ( $buffer >> $bufferSize ) & 0xFF );
-			}
-		}
-
-		return $data;
-	}
+        return $data;
+    }
 }
