@@ -32,7 +32,7 @@ class Auth2FA
                          (ord($hash[$offset + 3]) & 0xFF)
         ) % 1000000;
 
-        return mb_str_pad($otp, 6, '0', STR_PAD_LEFT);
+        return str_pad($otp, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -66,7 +66,7 @@ class Auth2FA
                        (ord($hash[$offset + 3]) & 0xFF)
         ) % 1000000;
 
-        return mb_str_pad($code, 6, '0', STR_PAD_LEFT);
+        return str_pad($code, 6, '0', STR_PAD_LEFT);
     }
 
     /**

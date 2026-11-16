@@ -59,7 +59,7 @@ class TwoFactorAuthorisation
             return $user;
         }
 
-        $code = mb_trim($_POST['totp_code'] ?? '');
+        $code = trim($_POST['totp_code'] ?? '');
 
         // Allow +-1 time-step window to tolerate minor clock drift
         if (! $this->verify_code_with_window($secret, $code)) {
@@ -229,7 +229,7 @@ class TwoFactorAuthorisation
             wp_send_json_error(['message' => __('No pending secret found. Please start setup again.', 'login-sec')]);
         }
 
-        $code = mb_trim($_POST['code'] ?? '');
+        $code = trim($_POST['code'] ?? '');
         if (! $this->verify_code_with_window($pending_secret, $code)) {
             wp_send_json_error(['message' => __('Invalid code. Please check your app and try again.', 'login-sec')]);
         }
