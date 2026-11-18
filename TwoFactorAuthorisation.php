@@ -44,22 +44,23 @@ class TwoFactorAuthorisation
 
     public function verify_totp_code($user, $username, $password)
     {
-        $user_id = username_exists($username);
-        $user_id = ! empty($user_id) ? $user_id : email_exists($username);
-
-        if ($user_id === false) {
+        if (is_wp_error($user) || ! ($user instanceof WP_User)) {
             return $user;
         }
 
-        $secret = get_user_meta($user_id, 'totp_secret', true);
-        $verified = get_user_meta($user_id, 'totp_verified', true);
+        if (! isset($_POST['log'], $_POST['pwd'])) {
+            return $user;
+        }
+
+        $secret = get_user_meta($user->ID, 'totp_secret', true);
+        $verified = get_user_meta($user->ID, 'totp_verified', true);
 
         // 2FA not set up or not confirmed yet — skip check
         if (empty($secret) || ! $verified) {
             return $user;
         }
 
-        $code = trim($_POST['totp_code'] ?? '');
+        $code = trim((string) wp_unslash($_POST['totp_code'] ?? ''));
 
         // Allow +-1 time-step window to tolerate minor clock drift
         if (! $this->verify_code_with_window($secret, $code)) {
