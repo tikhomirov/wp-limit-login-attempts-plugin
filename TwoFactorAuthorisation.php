@@ -75,7 +75,7 @@ class TwoFactorAuthorisation
      */
     private function verify_code_with_window(string $secret, string $code): bool
     {
-        if (mb_strlen($code) !== 6 || ! ctype_digit($code)) {
+        if (strlen($code) !== 6 || ! ctype_digit($code)) {
             return false;
         }
         for ($offset = -1; $offset <= 1; $offset++) {

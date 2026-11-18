@@ -79,7 +79,7 @@ class Auth2FA
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
         $secret = '';
-        $maxIndex = mb_strlen($characters) - 1;
+        $maxIndex = strlen($characters) - 1;
         for ($i = 0; $i < $length; $i++) {
             $secret .= $characters[rand(0, $maxIndex)];
         }
@@ -95,17 +95,17 @@ class Auth2FA
      */
     public static function base32_decode(string $str): string
     {
-        $str = mb_strtoupper($str);
+        $str = strtoupper($str);
         $str = str_replace(' ', '', $str);
         $str = str_replace('-', '', $str);
         $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
-        $map = array_flip(mb_str_split($chars));
+        $map = array_flip(str_split($chars));
         $data = '';
-        $len = mb_strlen($str);
+        $len = strlen($str);
         $buffer = 0;
         $bufferSize = 0;
         for ($i = 0; $i < $len; $i++) {
-            $char = mb_strtoupper($str[$i]);
+            $char = strtoupper($str[$i]);
             $byte = $map[$char];
             $buffer = ($buffer << 5) | $byte;
             $bufferSize += 5;

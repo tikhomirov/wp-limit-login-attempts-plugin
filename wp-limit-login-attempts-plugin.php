@@ -3,18 +3,31 @@
 /**
  * Plugin Name: Security. Limiting login attempts + 2FA verification.
  * Description: WordPress Security Plugin. Automatically blocked IP for many attempts login tries. + add lightweight 2FA by code.
- * Version:     1.0.4
+ * Version:     1.0.5
  * Author:      Aleksey Tikhomirov
  * Author URI:  http://rwsite.ru
  * Text Domain: login-sec
  * Domain Path: /languages
  *
- * Requires at least: 5.6
+ * Requires at least: 6.5
  * Tested up to: 7.2
- * Requires PHP: 7.4+
+ * Requires PHP: 8.3
  */
 
 defined('ABSPATH') or exit('There`s nothing here!');
+
+if (PHP_VERSION_ID < 80300) {
+    add_action('admin_notices', static function (): void {
+        if (! current_user_can('activate_plugins')) {
+            return;
+        }
+        echo '<div class="notice notice-error"><p>';
+        esc_html_e('Security. Limiting login attempts requires PHP 8.3 or newer.', 'login-sec');
+        echo '</p></div>';
+    });
+
+    return;
+}
 
 require_once 'LimitAttemptsAdmin.php';
 
