@@ -1,6 +1,6 @@
 {
   "name": "tikhomirov/wp-limit-login-attempts-plugin",
-  "description": "Комплексный плагин безопасности WordPress: авто-блокировка IP при подборе паролей (Brute-Force) + встроенная легкая двухфакторная аутентификация (2FA по коду).",
+  "description": "WordPress security plugin: automatic IP blocking on failed logins (brute-force protection) with lightweight TOTP two-factor authentication.",
   "type": "wordpress-plugin",
   "license": "GPL-3.0-or-later",
   "authors": [
