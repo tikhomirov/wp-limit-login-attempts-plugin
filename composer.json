@@ -2,7 +2,7 @@
   "name": "tikhomirov/wp-limit-login-attempts-plugin",
   "description": "WordPress security plugin: automatic IP blocking on failed logins (brute-force protection) with lightweight TOTP two-factor authentication.",
   "type": "wordpress-plugin",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "license": "GPL-3.0-or-later",
   "keywords": [
     "wordpress",
@@ -46,6 +46,7 @@
     "rector": "./vendor/bin/rector process --config rector.php --dry-run",
     "rector:fix": "./vendor/bin/rector process --config rector.php",
     "test": "@php tests/smoke-php-compat.php",
+    "test:all-php": "bash bin/smoke-all-php.sh",
     "quality": [
       "@php-lint",
       "@pint:check",

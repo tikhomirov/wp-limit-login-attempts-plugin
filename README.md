@@ -52,8 +52,7 @@ composer require tikhomirov/wp-limit-login-attempts-plugin
 
 ```bash
 composer install
-composer quality    # parallel-lint, Pint, PHPStan level 9, smoke test
+composer quality      # parallel-lint, Pint, PHPStan level 9, smoke test
 composer quality:fix  # Rector + Pint
+composer test:all-php # smoke on php8.3 / 8.4 / 8.5 when installed
 ```
-
-Smoke test (`tests/smoke-php-compat.php`) verifies TOTP math on the current PHP binary; run on 8.4/8.5 manually if needed.
