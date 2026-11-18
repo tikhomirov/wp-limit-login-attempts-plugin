@@ -1,23 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 /**
  * Auth2FA Service
  */
-class Auth2FA
+final class Auth2FA
 {
-    public static function TOTP($secret, int $timeSlice = 30): string
+    public static function TOTP(string $secret, int $timeSlice = 30): string
     {
-        $timeSliceBasedValue = floor(time() / $timeSlice);
+        $timeSliceBasedValue = (int) floor(time() / $timeSlice);
 
         return self::TOTP_at($secret, $timeSliceBasedValue);
     }
 
     /**
      * Generate TOTP code for a specific pre-computed time slice value.
-     * Used internally for +-1 window verification.
-     *
-     * @param  int    $timeSliceValue Pre-computed floor(time/step) value
-     * @return string 6-digit OTP
      */
     public static function TOTP_at(string $secret, int $timeSliceValue): string
     {
@@ -26,78 +24,55 @@ class Auth2FA
         $hash = hash_hmac('sha1', $data, $secretKey, true);
         $offset = ord($hash[19]) & 0xF;
         $otp = (
-            ((ord($hash[$offset + 0]) & 0x7F) << 24) |
-                         ((ord($hash[$offset + 1]) & 0xFF) << 16) |
-                         ((ord($hash[$offset + 2]) & 0xFF) << 8) |
-                         (ord($hash[$offset + 3]) & 0xFF)
-        ) % 1000000;
+            ((ord($hash[$offset]) & 0x7F) << 24) |
+            ((ord($hash[$offset + 1]) & 0xFF) << 16) |
+            ((ord($hash[$offset + 2]) & 0xFF) << 8) |
+            (ord($hash[$offset + 3]) & 0xFF)
+        ) % 1_000_000;
 
-        return str_pad($otp, 6, '0', STR_PAD_LEFT);
+        return str_pad((string) $otp, 6, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Return expire time of current TOTP code
-     *
-     * @param $secret
-     */
     public static function expire_time(int $timeSlice = 30): int
     {
-        $timeSliceBasedValue = floor(time() / $timeSlice);
+        $timeSliceBasedValue = (int) floor(time() / $timeSlice);
 
         return ($timeSliceBasedValue + 1) * $timeSlice;
     }
 
-    /**
-     * Generate HMAC-based One Time Password
-     *
-     *
-     * @return string OTP code
-     */
-    public static function HOTP($secret, $counter): string
+    public static function HOTP(string $secret, int $counter): string
     {
-        $secret = self::base32_decode($secret);
-        $counter = pack('N*', 0) . pack('N*', $counter);
-        $hash = hash_hmac('sha1', $counter, $secret, true);
+        $secretKey = self::base32_decode($secret);
+        $packed = pack('N*', 0).pack('N*', $counter);
+        $hash = hash_hmac('sha1', $packed, $secretKey, true);
         $offset = ord($hash[19]) & 0xF;
         $code = (
-            ((ord($hash[$offset + 0]) & 0x7F) << 24) |
-                       ((ord($hash[$offset + 1]) & 0xFF) << 16) |
-                       ((ord($hash[$offset + 2]) & 0xFF) << 8) |
-                       (ord($hash[$offset + 3]) & 0xFF)
-        ) % 1000000;
+            ((ord($hash[$offset]) & 0x7F) << 24) |
+            ((ord($hash[$offset + 1]) & 0xFF) << 16) |
+            ((ord($hash[$offset + 2]) & 0xFF) << 8) |
+            (ord($hash[$offset + 3]) & 0xFF)
+        ) % 1_000_000;
 
-        return str_pad($code, 6, '0', STR_PAD_LEFT);
+        return str_pad((string) $code, 6, '0', STR_PAD_LEFT);
     }
 
-    /**
-     * Generate random secret key
-     *
-     *
-     * @return string secret key
-     */
     public static function generate_secret(int $length = 32): string
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
         $secret = '';
         $maxIndex = strlen($characters) - 1;
         for ($i = 0; $i < $length; $i++) {
-            $secret .= $characters[rand(0, $maxIndex)];
+            $secret .= $characters[random_int(0, $maxIndex)];
         }
 
         return $secret;
     }
 
-    /**
-     * Decode a base32-encoded string.
-     *
-     * @param  string $str The base32-encoded string to decode.
-     * @return string Returns the decoded string.
-     */
     public static function base32_decode(string $str): string
     {
         $str = strtoupper($str);
-        $str = str_replace(' ', '', $str);
-        $str = str_replace('-', '', $str);
+        $str = str_replace([' ', '-'], '', $str);
+
         $chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
         $map = array_flip(str_split($chars));
         $data = '';
@@ -106,6 +81,10 @@ class Auth2FA
         $bufferSize = 0;
         for ($i = 0; $i < $len; $i++) {
             $char = strtoupper($str[$i]);
+            if (! isset($map[$char])) {
+                continue;
+            }
+
             $byte = $map[$char];
             $buffer = ($buffer << 5) | $byte;
             $bufferSize += 5;

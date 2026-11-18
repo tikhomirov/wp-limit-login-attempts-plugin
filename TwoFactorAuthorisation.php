@@ -1,36 +1,36 @@
 <?php
 
-defined('ABSPATH') or exit('There`s nothing here!');
+declare(strict_types=1);
+
+defined('ABSPATH') || exit('There`s nothing here!');
 
 class TwoFactorAuthorisation
 {
-    public function __construct() {}
-
-    public function add_actions()
+    public function add_actions(): void
     {
-        add_action('login_form', [$this, 'add_2fa_form']);
-        add_filter('authenticate', [$this, 'verify_totp_code'], 100, 3);
+        add_action('login_form', $this->add_2fa_form(...));
+        add_filter('authenticate', $this->verify_totp_code(...), 100, 3);
 
-        add_action('show_user_profile', [$this, 'display_qr_code'], 1, 1);
-        add_action('edit_user_profile', [$this, 'display_qr_code'], 1, 1);
+        add_action('show_user_profile', $this->display_qr_code(...), 1, 1);
+        add_action('edit_user_profile', $this->display_qr_code(...), 1, 1);
 
-        add_action('wp_ajax_generate_pending_secret', [$this, 'handle_generate_pending_secret']);
-        add_action('wp_ajax_confirm_totp_setup', [$this, 'handle_confirm_totp_setup']);
-        add_action('wp_ajax_regenerate_secret', [$this, 'handle_secret_regeneration']);
-        add_action('wp_ajax_delete_secret', [$this, 'handle_secret_delete']);
+        add_action('wp_ajax_generate_pending_secret', $this->handle_generate_pending_secret(...));
+        add_action('wp_ajax_confirm_totp_setup', $this->handle_confirm_totp_setup(...));
+        add_action('wp_ajax_regenerate_secret', $this->handle_secret_regeneration(...));
+        add_action('wp_ajax_delete_secret', $this->handle_secret_delete(...));
 
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_scripts'], 99);
+        add_action('admin_enqueue_scripts', $this->enqueue_scripts(...), 99);
     }
 
     // -------------------------------------------------------------------------
     // Login form: field for the TOTP code
     // -------------------------------------------------------------------------
 
-    public function add_2fa_form()
+    public function add_2fa_form(): void
     {
         echo '<p>
-			<label for="totp_code">' .
-             __('Enter the 2FA code if you have one installed', 'login-sec') . ':
+			<label for="totp_code">'.
+             __('Enter the 2FA code if you have one installed', 'login-sec').':
 			</label>
 			<input type="text" name="totp_code" id="totp_code" class="input" value="" size="20"
 			       autocomplete="one-time-code" inputmode="numeric" />
@@ -42,27 +42,32 @@ class TwoFactorAuthorisation
     // Runs ONLY when 2FA is fully set up (totp_secret + totp_verified = 1)
     // -------------------------------------------------------------------------
 
-    public function verify_totp_code($user, $username, $password)
+    public function verify_totp_code(mixed $user, mixed $username, mixed $password): WP_User|WP_Error|null
     {
-        if (is_wp_error($user) || ! ($user instanceof WP_User)) {
+        if (is_wp_error($user)) {
             return $user;
         }
+
+        if (! ($user instanceof WP_User)) {
+            return null;
+        }
+
+        unset($username, $password);
 
         if (! isset($_POST['log'], $_POST['pwd'])) {
             return $user;
         }
 
-        $secret = get_user_meta($user->ID, 'totp_secret', true);
-        $verified = get_user_meta($user->ID, 'totp_verified', true);
+        $secret = $this->userMetaString($user->ID, 'totp_secret');
+        $verified = $this->userMetaBool($user->ID, 'totp_verified');
 
-        // 2FA not set up or not confirmed yet — skip check
-        if (empty($secret) || ! $verified) {
+        if ($secret === '' || ! $verified) {
             return $user;
         }
 
-        $code = trim((string) wp_unslash($_POST['totp_code'] ?? ''));
+        $rawCode = $_POST['totp_code'] ?? '';
+        $code = is_string($rawCode) ? trim(wp_unslash($rawCode)) : '';
 
-        // Allow +-1 time-step window to tolerate minor clock drift
         if (! $this->verify_code_with_window($secret, $code)) {
             return new WP_Error('invalid_totp', __('Invalid 2FA code.', 'login-sec'));
         }
@@ -79,7 +84,7 @@ class TwoFactorAuthorisation
             return false;
         }
         for ($offset = -1; $offset <= 1; $offset++) {
-            $time_slice = floor(time() / 30) + $offset;
+            $time_slice = (int) floor(time() / 30) + $offset;
             $candidate = Auth2FA::TOTP_at($secret, $time_slice);
             if (hash_equals($candidate, $code)) {
                 return true;
@@ -93,11 +98,11 @@ class TwoFactorAuthorisation
     // Profile page: 2FA setup widget
     // -------------------------------------------------------------------------
 
-    public function display_qr_code(WP_User $user)
+    public function display_qr_code(WP_User $user): void
     {
-        $secret = get_user_meta($user->ID, 'totp_secret', true);
-        $verified = (bool) get_user_meta($user->ID, 'totp_verified', true);
-        $pending_secret = get_user_meta($user->ID, 'totp_pending_secret', true);
+        $secret = $this->userMetaString($user->ID, 'totp_secret');
+        $verified = $this->userMetaBool($user->ID, 'totp_verified');
+        $pending_secret = $this->userMetaString($user->ID, 'totp_pending_secret');
         ?>
 		<div class="application-2fa" id="application-2fa" style="margin-bottom:1rem;">
 			<h2><?php _e('Two-factor authentication app', 'login-sec'); ?></h2>
@@ -117,12 +122,12 @@ class TwoFactorAuthorisation
 					<span style="font-size:1.4em;">&#x2705;</span>
 					<strong><?php _e('Two-factor authentication is active.', 'login-sec'); ?></strong>
 				</div>
-				<button id="regenerate-secret-button" data-user="<?php echo esc_attr($user->ID); ?>"
+				<button id="regenerate-secret-button" data-user="<?php echo esc_attr((string) $user->ID); ?>"
 				        class="button button-secondary">
 					<?php _e('Change 2FA device (regenerate secret)', 'login-sec'); ?>
 				</button>
 				&nbsp;
-				<button id="delete-secret-button" data-user="<?php echo esc_attr($user->ID); ?>"
+				<button id="delete-secret-button" data-user="<?php echo esc_attr((string) $user->ID); ?>"
 				        class="button button-link-delete" style="color:#a00;">
 					<?php _e('Delete secret', 'login-sec'); ?>
 				</button>
@@ -133,7 +138,7 @@ class TwoFactorAuthorisation
 					<?php if (! $pending_secret) { ?>
 						<!-- Step 1: no pending secret yet -->
 						<p><?php _e('Two-factor authentication is not configured.', 'login-sec'); ?></p>
-						<button id="generate-secret-button" data-user="<?php echo esc_attr($user->ID); ?>"
+						<button id="generate-secret-button" data-user="<?php echo esc_attr((string) $user->ID); ?>"
 						        class="button button-primary">
 							<?php _e('Set up 2FA', 'login-sec'); ?>
 						</button>
@@ -142,7 +147,7 @@ class TwoFactorAuthorisation
 					    $name = get_bloginfo('name');
 					    $label = urlencode($user->user_login);
 					    $otpauth = "otpauth://totp/{$label}?secret={$pending_secret}&issuer={$name}";
-					    $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' . urlencode($otpauth);
+					    $qr_code_url = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='.urlencode($otpauth);
 					    ?>
 						<!-- Step 2: scan QR and confirm -->
 						<ol style="line-height:2;">
@@ -167,7 +172,7 @@ class TwoFactorAuthorisation
 							       placeholder="000000" autocomplete="one-time-code" inputmode="numeric"
 							       style="font-size:1.2em;letter-spacing:.2em;width:8em;" />
 							&nbsp;
-							<button id="confirm-totp-button" data-user="<?php echo esc_attr($user->ID); ?>"
+							<button id="confirm-totp-button" data-user="<?php echo esc_attr((string) $user->ID); ?>"
 							        class="button button-primary">
 								<?php _e('Confirm', 'login-sec'); ?>
 							</button>
@@ -175,7 +180,7 @@ class TwoFactorAuthorisation
 						</div>
 
 						<p style="margin-top:1rem;">
-							<button id="generate-secret-button" data-user="<?php echo esc_attr($user->ID); ?>"
+							<button id="generate-secret-button" data-user="<?php echo esc_attr((string) $user->ID); ?>"
 							        class="button button-link" style="color:#888;font-size:.85em;">
 								<?php _e('Generate new QR code', 'login-sec'); ?>
 							</button>
@@ -191,13 +196,13 @@ class TwoFactorAuthorisation
     // AJAX: generate a pending (unconfirmed) secret
     // -------------------------------------------------------------------------
 
-    public function handle_generate_pending_secret()
+    public function handle_generate_pending_secret(): void
     {
-        if (! wp_verify_nonce($_POST['nonce'] ?? '')) {
+        if (! $this->verifyAjaxRequest()) {
             wp_send_json_error(['message' => __('Security check failed.', 'login-sec')]);
         }
 
-        $target_user_id = absint($_POST['id'] ?? 0);
+        $target_user_id = $this->postUserId('id');
         if (! current_user_can('edit_user', $target_user_id)) {
             wp_send_json_error(['message' => __('Not enough rights.', 'login-sec')]);
         }
@@ -214,23 +219,24 @@ class TwoFactorAuthorisation
     // AJAX: confirm pending secret — verify code, promote to active
     // -------------------------------------------------------------------------
 
-    public function handle_confirm_totp_setup()
+    public function handle_confirm_totp_setup(): void
     {
-        if (! wp_verify_nonce($_POST['nonce'] ?? '')) {
+        if (! $this->verifyAjaxRequest()) {
             wp_send_json_error(['message' => __('Security check failed.', 'login-sec')]);
         }
 
-        $target_user_id = absint($_POST['id'] ?? 0);
+        $target_user_id = $this->postUserId('id');
         if (! current_user_can('edit_user', $target_user_id)) {
             wp_send_json_error(['message' => __('Not enough rights.', 'login-sec')]);
         }
 
-        $pending_secret = get_user_meta($target_user_id, 'totp_pending_secret', true);
-        if (empty($pending_secret)) {
+        $pending_secret = $this->userMetaString($target_user_id, 'totp_pending_secret');
+        if ($pending_secret === '') {
             wp_send_json_error(['message' => __('No pending secret found. Please start setup again.', 'login-sec')]);
         }
 
-        $code = trim($_POST['code'] ?? '');
+        $rawCode = $_POST['code'] ?? '';
+        $code = is_string($rawCode) ? trim($rawCode) : '';
         if (! $this->verify_code_with_window($pending_secret, $code)) {
             wp_send_json_error(['message' => __('Invalid code. Please check your app and try again.', 'login-sec')]);
         }
@@ -250,13 +256,13 @@ class TwoFactorAuthorisation
     // Clears active secret; generates a new pending one; user must confirm again
     // -------------------------------------------------------------------------
 
-    public function handle_secret_regeneration()
+    public function handle_secret_regeneration(): void
     {
-        if (! wp_verify_nonce($_POST['nonce'] ?? '')) {
+        if (! $this->verifyAjaxRequest()) {
             wp_send_json_error(['message' => __('Security check failed.', 'login-sec')]);
         }
 
-        $target_user_id = absint($_POST['id'] ?? get_current_user_id());
+        $target_user_id = $this->postUserId('id', get_current_user_id());
         if (! current_user_can('edit_user', $target_user_id)) {
             wp_send_json_error(['message' => __('Not enough rights.', 'login-sec')]);
         }
@@ -276,13 +282,13 @@ class TwoFactorAuthorisation
     // AJAX: delete secret completely — disables 2FA
     // -------------------------------------------------------------------------
 
-    public function handle_secret_delete()
+    public function handle_secret_delete(): void
     {
-        if (! wp_verify_nonce($_POST['nonce'] ?? '')) {
+        if (! $this->verifyAjaxRequest()) {
             wp_send_json_error(['message' => __('Security check failed.', 'login-sec')]);
         }
 
-        $target_user_id = absint($_POST['id'] ?? 0);
+        $target_user_id = $this->postUserId('id');
         if (! current_user_can('edit_user', $target_user_id)) {
             wp_send_json_error(['message' => __('Not enough rights.', 'login-sec')]);
         }
@@ -300,11 +306,11 @@ class TwoFactorAuthorisation
     // Scripts (profile page only)
     // -------------------------------------------------------------------------
 
-    public function enqueue_scripts()
+    public function enqueue_scripts(): void
     {
         global $current_screen;
 
-        if ($current_screen->base !== 'profile') {
+        if (! isset($current_screen->base) || $current_screen->base !== 'profile') {
             return;
         }
 
@@ -320,10 +326,10 @@ class TwoFactorAuthorisation
 					e.preventDefault();
 					var btn = $(this);
 					btn.prop("disabled", true).text("Generating\u2026");
-					$.post("' . $ajaxurl . '", {
+					$.post("'.$ajaxurl.'", {
 						action: "generate_pending_secret",
 						id: btn.data("user"),
-						nonce: "' . $nonce . '"
+						nonce: "'.$nonce.'"
 					}, function(response) {
 						if (response.success) {
 							location.reload();
@@ -349,11 +355,11 @@ class TwoFactorAuthorisation
 					btn.prop("disabled", true);
 					msg.css("color", "#555").text("Checking\u2026");
 
-					$.post("' . $ajaxurl . '", {
+					$.post("'.$ajaxurl.'", {
 						action: "confirm_totp_setup",
 						id: btn.data("user"),
 						code: code,
-						nonce: "' . $nonce . '"
+						nonce: "'.$nonce.'"
 					}, function(response) {
 						if (response.success) {
 							msg.css("color", "#246b24").text("\u2713 " + response.data.message);
@@ -375,10 +381,10 @@ class TwoFactorAuthorisation
 				$(document).on("click", "#regenerate-secret-button", function(e) {
 					e.preventDefault();
 					if (!confirm("This will invalidate your current 2FA. You will need to re-scan a new QR code. Continue?")) return;
-					$.post("' . $ajaxurl . '", {
+					$.post("'.$ajaxurl.'", {
 						action: "regenerate_secret",
 						id: $(this).data("user"),
-						nonce: "' . $nonce . '"
+						nonce: "'.$nonce.'"
 					}, function(response) {
 						alert(response.data.message);
 						location.reload();
@@ -389,10 +395,10 @@ class TwoFactorAuthorisation
 				$(document).on("click", "#delete-secret-button", function(e) {
 					e.preventDefault();
 					if (!confirm("Are you sure you want to disable 2FA for this account?")) return;
-					$.post("' . $ajaxurl . '", {
+					$.post("'.$ajaxurl.'", {
 						action: "delete_secret",
 						id: $(this).data("user"),
-						nonce: "' . $nonce . '"
+						nonce: "'.$nonce.'"
 					}, function(response) {
 						alert(response.data.message);
 						location.reload();
@@ -401,5 +407,48 @@ class TwoFactorAuthorisation
 
 			});
 		');
+    }
+
+    private function verifyAjaxRequest(): bool
+    {
+        $nonce = $_POST['nonce'] ?? '';
+        if (! is_string($nonce)) {
+            return false;
+        }
+
+        return wp_verify_nonce(wp_unslash($nonce)) !== false;
+    }
+
+    private function postUserId(string $key, int $default = 0): int
+    {
+        $value = $_POST[$key] ?? $default;
+        if (is_int($value)) {
+            return absint($value);
+        }
+
+        if (is_string($value) && $value !== '') {
+            return absint($value);
+        }
+
+        return $default;
+    }
+
+    private function userMetaString(int $userId, string $key): string
+    {
+        $value = get_user_meta($userId, $key, true);
+        if (is_string($value)) {
+            return $value;
+        }
+
+        if (is_scalar($value)) {
+            return (string) $value;
+        }
+
+        return '';
+    }
+
+    private function userMetaBool(int $userId, string $key): bool
+    {
+        return (bool) get_user_meta($userId, $key, true);
     }
 }

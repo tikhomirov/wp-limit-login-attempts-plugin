@@ -47,3 +47,13 @@ composer require tikhomirov/wp-limit-login-attempts-plugin
 - Автоматическая блокировка IP при попытках подбора пароля и 2FA.
 
 **Установка:** подключите через Composer (VCS) или скачайте архив и активируйте в панели управления WordPress.
+
+### Development
+
+```bash
+composer install
+composer quality    # parallel-lint, Pint, PHPStan level 9, smoke test
+composer quality:fix  # Rector + Pint
+```
+
+Smoke test (`tests/smoke-php-compat.php`) verifies TOTP math on the current PHP binary; run on 8.4/8.5 manually if needed.
